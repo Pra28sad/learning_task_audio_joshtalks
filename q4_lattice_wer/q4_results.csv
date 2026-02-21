@@ -1,0 +1,7 @@
+model,wer_vs_reference_pct,wer_vs_lattice_pct,delta_pct,improved
+Model H,3.98,3.09,-0.89,yes
+Model i,6.7,7.76,1.06,no
+Model n,11.39,9.62,-1.77,yes
+Model l,11.32,10.2,-1.12,yes
+Model m,20.73,18.76,-1.97,yes
+Model k,24.27,23.93,-0.34,yes

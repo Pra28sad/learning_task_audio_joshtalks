@@ -1,0 +1,21 @@
+Disfluency Detection Methodology
+=================================
+
+1. How disfluencies were detected:
+   - Text-based analysis on segment-level transcriptions from the dataset.
+   - Fillers: matched against a curated list of Hindi filler words
+     (e.g., अ, अम्म, उह, हम्म, मतलब, तो, बस).
+   - Repetitions: detected consecutive identical words using token comparison.
+   - False starts: identified via hyphen/ellipsis patterns indicating interrupted speech.
+   - Prolongations: regex matching for repeated characters (e.g., हम्म्म).
+   - Hesitations: short segments (<= 3 tokens) composed entirely of backchannel words.
+
+2. How audio segments were clipped:
+   - Used the start/end timestamps from the transcription JSON for each segment.
+   - Clipped using ffmpeg with mono 16kHz output for consistency.
+   - Command: ffmpeg -ss <start> -to <end> -i <full_audio> -ac 1 -ar 16000 <clip>
+
+3. Preprocessing/Normalization:
+   - Unicode NFC normalization on all text.
+   - Whitespace collapsing and stripping.
+   - Punctuation-insensitive token matching for filler detection.

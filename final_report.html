@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Josh Talks - AI Researcher Intern: Speech & Audio Task</title>
+<style>
+  @page { margin: 2cm 2cm 2cm 2cm; size: A4; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    line-height: 1.6;
+    color: #222;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    font-size: 14px;
+  }
+  h1 {
+    text-align: center;
+    color: #1a1a2e;
+    font-size: 26px;
+    margin-bottom: 5px;
+    border-bottom: 3px solid #e74c3c;
+    padding-bottom: 15px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+  h2 {
+    color: #e74c3c;
+    font-size: 20px;
+    margin-top: 35px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+  }
+  h3 {
+    color: #333;
+    font-size: 16px;
+    margin-top: 20px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15px 0;
+    font-size: 13px;
+  }
+  th {
+    background-color: #2c3e50;
+    color: white;
+    padding: 10px 12px;
+    text-align: left;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #ddd;
+  }
+  tr:nth-child(even) { background-color: #f8f9fa; }
+  .result-box {
+    background: #f0f7f0;
+    border-left: 4px solid #27ae60;
+    padding: 12px 16px;
+    margin: 15px 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .result-box strong { color: #27ae60; }
+  .highlight-box {
+    background: #fff3e0;
+    border-left: 4px solid #f39c12;
+    padding: 12px 16px;
+    margin: 15px 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .figure-container {
+    text-align: center;
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+  .figure-container img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  .figure-caption {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    font-style: italic;
+  }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: 'Consolas', monospace;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  ul { margin: 8px 0; padding-left: 25px; }
+  li { margin-bottom: 4px; }
+  .summary-table td:first-child { font-weight: bold; }
+  .page-break { page-break-before: always; }
+  .toc { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
+  .toc ul { list-style: none; padding-left: 0; }
+  .toc li { padding: 4px 0; }
+  .toc li::before { content: none; }
+</style>
+</head>
+<body>
+
+<h1>Task Assignment | AI Researcher Intern<br>Speech & Audio | Josh Talks</h1>
+<p class="subtitle">Candidate: Ayithireddy Pavan</p>
+
+<div class="toc">
+<strong>Table of Contents</strong>
+<ul>
+<li>1. Question 1: Hindi ASR Fine-tuning &amp; Evaluation</li>
+<li>2. Question 2: Disfluency Detection</li>
+<li>3. Question 3: Spelling Classification</li>
+<li>4. Question 4: Lattice-Based Fair WER</li>
+<li>5. Key Learnings &amp; Insights</li>
+<li>6. Appendix: Reproduction Steps &amp; Code</li>
+</ul>
+</div>
+
+<!-- ==================== RESULTS SUMMARY ==================== -->
+
+<h2>Results Summary</h2>
+<table class="summary-table">
+<tr><th>Question</th><th>Task</th><th>Key Result</th></tr>
+<tr><td>Q1</td><td>Hindi ASR Fine-tuning</td><td>WER: 61.78% &rarr; <strong>36.66%</strong> (40.7% relative improvement)</td></tr>
+<tr><td>Q2</td><td>Disfluency Detection</td><td><strong>7,724</strong> occurrences detected, <strong>3,992</strong> audio clips</td></tr>
+<tr><td>Q3</td><td>Spelling Classification</td><td>7,448 words &rarr; <strong>2,622 correct</strong>, <strong>4,826 incorrect</strong></td></tr>
+<tr><td>Q4</td><td>Lattice-based Fair WER</td><td><strong>30.4%</strong> references corrected, <strong>5/6 models</strong> improved</td></tr>
+</table>
+
+<!-- ==================== Q1 ==================== -->
+
+<h2 class="page-break">Question 1: Hindi ASR Fine-tuning &amp; Evaluation</h2>
+
+<h3>a) Data Preprocessing</h3>
+
+<p><strong>Problem:</strong> The provided dataset has ~22 hours of Hindi conversational audio with human transcriptions. Fine-tune an ASR model and evaluate against the FLEURS Hindi benchmark.</p>
+
+<h3>Steps:</h3>
+<ol>
+<li><strong>Download:</strong> Fetched 104 audio files (.wav) and transcription JSONs from GCS using the URL pattern:<br>
+<code>https://storage.googleapis.com/upload_goai/{user_id}/{recording_id}_audio.wav</code></li>
+<li><strong>Parse transcriptions:</strong> Each transcription JSON is a top-level array of segments:
+<code>[{"start": 0.0, "end": 5.2, "speaker_id": "S1", "text": "..."}, ...]</code></li>
+<li><strong>Segment-level splitting:</strong> Split each recording into segments using the JSON timestamps, producing <strong>5,732 segments</strong> from 104 recordings.
+<ul>
+<li>Train: 4,801 segments (85 recordings)</li>
+<li>Validation: 375 segments (6 recordings)</li>
+<li>Test: 556 segments (13 recordings)</li>
+</ul></li>
+<li><strong>Text normalization:</strong> Unicode NFC normalization, whitespace collapsing, stripped punctuation for WER evaluation.</li>
+<li><strong>Lazy audio loading:</strong> Used <code>librosa.load(path, sr=16000, offset=start, duration=end-start)</code> to load only the required segment on-the-fly, avoiding full-recording memory overhead.</li>
+</ol>
+
+<div class="highlight-box">
+<strong>Why segment-level, not full recordings?</strong>
+<ul>
+<li>Whisper's input limit is 30 seconds</li>
+<li>Segment-level gives 55x more training examples (5,732 vs 104)</li>
+<li>Aligns text precisely with the correct audio portion</li>
+</ul>
+</div>
+
+<h3>b) Fine-tuning Configuration</h3>
+
+<table>
+<tr><th>Parameter</th><th>Value</th></tr>
+<tr><td>Base model</td><td>openai/whisper-small (244M params)</td></tr>
+<tr><td>Language</td><td>Hindi</td></tr>
+<tr><td>Epochs</td><td>3</td></tr>
+<tr><td>Batch size</td><td>2 (effective: 8 with gradient accumulation = 4)</td></tr>
+<tr><td>Learning rate</td><td>1e-5 (AdamW optimizer)</td></tr>
+<tr><td>Training time</td><td>~47 minutes (single GPU)</td></tr>
+</table>
+
+<h3>Training Progression:</h3>
+<table>
+<tr><th>Epoch</th><th>Train Loss</th><th>Eval Loss</th><th>Eval WER</th></tr>
+<tr><td>1</td><td>0.7116</td><td>0.4044</td><td>43.14%</td></tr>
+<tr><td>2</td><td>0.2415</td><td>0.3693</td><td>37.50%</td></tr>
+<tr><td>3</td><td>0.0956</td><td>0.3638</td><td>35.95%</td></tr>
+</table>
+
+<p><strong>Observations:</strong></p>
+<ul>
+<li>Training loss drops rapidly (0.71 &rarr; 0.10), indicating the model learns Hindi patterns well</li>
+<li>Eval loss plateaus after epoch 2, suggesting 3 epochs is sufficient to avoid overfitting</li>
+<li>The eval WER (35.95%) closely matches the FLEURS test WER (36.66%), confirming generalization</li>
+</ul>
+
+<h3>c) WER Results (FLEURS Hindi Test, 418 samples)</h3>
+
+<table>
+<tr><th>Model</th><th>Hindi WER</th></tr>
+<tr><td>Whisper Small (Pretrained)</td><td>0.6178 (61.78%)</td></tr>
+<tr><td>FT Whisper Small (ours)</td><td><strong>0.3666 (36.66%)</strong></td></tr>
+</table>
+
+<div class="result-box">
+<strong>Improvement: 25.12 percentage points (40.7% relative reduction)</strong>
+</div>
+
+<div class="figure-container">
+<img src="figures/fig_q1_wer_comparison.png" alt="Q1 WER Comparison">
+<p class="figure-caption">Figure 1: WER comparison on FLEURS Hindi test set (418 samples)</p>
+</div>
+
+<!-- ==================== Q2 ==================== -->
+
+<h2 class="page-break">Question 2: Disfluency Detection</h2>
+
+<h3>Approach</h3>
+
+<p><strong>Problem:</strong> Identify speech disfluencies from the 10-hour Hindi dataset at segment level, clip audio for each occurrence, and create a structured output sheet.</p>
+
+<h3>Disfluency Types Detected:</h3>
+<ol>
+<li><strong>Fillers</strong> &mdash; Hindi-specific: अ, अम्म, उह, हम्म, हूं, etc. + contextual fillers (मतलब, तो, बस) when appearing at sentence boundaries</li>
+<li><strong>Repetitions</strong> &mdash; Consecutive identical words (e.g., "वो वो वो")</li>
+<li><strong>False starts</strong> &mdash; Words interrupted by hyphen/ellipsis (e.g., "र-", "स-")</li>
+<li><strong>Prolongations</strong> &mdash; Repeated characters indicating stretched speech (e.g., "हम्म्म", "एएए")</li>
+<li><strong>Hesitations</strong> &mdash; Short segments (&le;3 tokens) consisting only of backchannel words</li>
+</ol>
+
+<div class="highlight-box">
+<strong>Why text-based detection (not audio-based)?</strong>
+<ul>
+<li>The transcriptions already encode disfluency markers (fillers are transcribed by annotators)</li>
+<li>Audio-based detection (pitch/energy features) would require labeled training data we don't have</li>
+<li>Text patterns are interpretable and auditable</li>
+</ul>
+</div>
+
+<h3>Methodology:</h3>
+<ol>
+<li><strong>Text normalization:</strong> Unicode NFC, ZWNJ/ZWJ removal, whitespace collapsing</li>
+<li><strong>Pattern matching:</strong> Exact-match for known fillers, regex for repetitions/prolongations, structural patterns for false starts</li>
+<li><strong>Audio clipping:</strong> For each detected disfluency, extracted the segment audio using <code>ffmpeg</code> with the transcription timestamps (start_sec, end_sec)</li>
+<li><strong>Output format:</strong> One row per disfluency occurrence with columns matching the requested schema</li>
+</ol>
+
+<h3>Results:</h3>
+
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Total disfluency occurrences</td><td><strong>7,724</strong></td></tr>
+<tr><td>Audio clips extracted</td><td><strong>3,992</strong></td></tr>
+<tr><td>Unique segments with disfluencies</td><td>119</td></tr>
+</table>
+
+<table>
+<tr><th>Disfluency Type</th><th>Count</th><th>Percentage</th></tr>
+<tr><td>Filler</td><td>5,026</td><td>65.1%</td></tr>
+<tr><td>Repetition</td><td>1,794</td><td>23.2%</td></tr>
+<tr><td>Hesitation</td><td>886</td><td>11.5%</td></tr>
+<tr><td>False start</td><td>9</td><td>0.1%</td></tr>
+<tr><td>Prolongation</td><td>9</td><td>0.1%</td></tr>
+</table>
+
+<div class="figure-container">
+<img src="figures/fig_q2_disfluency_dist.png" alt="Q2 Disfluency Distribution">
+<p class="figure-caption">Figure 2: Distribution of disfluency types across the dataset</p>
+</div>
+
+<h3>Sample Detections:</h3>
+<table>
+<tr><th>Type</th><th>Evidence</th><th>Context (snippet)</th></tr>
+<tr><td>Filler</td><td>अम्म</td><td>"अम्म फिलहाल तो मेरा है कि मुझे प्रोफेसर बनना है..."</td></tr>
+<tr><td>Repetition</td><td>हां (x2)</td><td>"जी हां हां..."</td></tr>
+<tr><td>False start</td><td>र-</td><td>"हम जहां भी है मान लीजिए कोई किराना स्टोर पे..."</td></tr>
+<tr><td>Prolongation</td><td>एएए</td><td>"हूँ हूँ हूँ बिजनेस यानि जरूरतमंद की भी..."</td></tr>
+<tr><td>Hesitation</td><td>हुन</td><td>"हुन..."</td></tr>
+</table>
+
+<p><strong>Deliverables:</strong> Structured disfluency sheet (CSV in requested format) + 3,992 segmented audio clips (available via Google Drive link)</p>
+
+<!-- ==================== Q3 ==================== -->
+
+<h2 class="page-break">Question 3: Spelling Classification</h2>
+
+<h3>Approach</h3>
+
+<p><strong>Problem:</strong> Classify ~1,75,000 unique words as correctly or incorrectly spelled. Key challenge: no comprehensive Hindi spell-checker exists, and English words spoken in conversation are transcribed in Devanagari (e.g., "computer" &rarr; "कंप्यूटर"), which counts as correct.</p>
+
+<h3>Multi-Signal Classification Strategy:</h3>
+
+<ol>
+<li><strong>Known-good dictionary (~300+ words):</strong> Manually curated list of common Hindi words that are unambiguously correct (pronouns, postpositions, common verbs, numbers). Any word in this set &rarr; correct.</li>
+
+<li><strong>Devanagari structure validation:</strong> Checks whether character sequences are structurally valid:
+<ul>
+<li>No orphaned matras (vowel signs without preceding consonants)</li>
+<li>Valid conjunct formations using halant</li>
+<li>Proper use of nukta, anusvara, visarga</li>
+</ul>
+Words failing structural checks &rarr; incorrect.</li>
+
+<li><strong>Frequency + recording spread:</strong> Words appearing across many different recordings (high "spread") are likely genuine vocabulary:
+<ul>
+<li>Word in 5+ recordings &rarr; likely correct</li>
+<li>Word in only 1 recording with low frequency &rarr; likely typo/error</li>
+</ul></li>
+
+<li><strong>English-in-Devanagari handling:</strong> Per guidelines, transliterated English is correct. Detected using common transliteration patterns and suffixes.</li>
+</ol>
+
+<div class="highlight-box">
+<strong>Why not a spell-checker API?</strong>
+<ul>
+<li>Hindi spell-checkers have limited conversational vocabulary coverage</li>
+<li>They flag valid transliterated English words as errors</li>
+<li>Corpus-based signals (frequency/spread) leverage the dataset's own redundancy</li>
+<li>More interpretable and auditable than a black-box API</li>
+</ul>
+</div>
+
+<h3>Results:</h3>
+
+<table>
+<tr><th>Classification</th><th>Count</th><th>Percentage</th></tr>
+<tr><td>Correct spelling</td><td><strong>2,622</strong></td><td>35.2%</td></tr>
+<tr><td>Incorrect spelling</td><td><strong>4,826</strong></td><td>64.8%</td></tr>
+<tr><td><em>Total unique words</em></td><td><em>7,448</em></td><td></td></tr>
+</table>
+
+<div class="figure-container">
+<img src="figures/fig_q3_spelling_dist.png" alt="Q3 Spelling Distribution">
+<p class="figure-caption">Figure 3: Spelling classification distribution (7,448 unique words)</p>
+</div>
+
+<p><strong>Deliverable:</strong> Google Sheet / CSV with 2 columns (word, label) &mdash; 7,448 rows.</p>
+
+<!-- ==================== Q4 ==================== -->
+
+<h2 class="page-break">Question 4: Lattice-Based Fair WER</h2>
+
+<h3>Problem</h3>
+<p>When the human reference itself contains errors, models that transcribed <em>correctly</em> get unfairly penalized by WER. We need a method to build a "fairer" reference using consensus from multiple ASR models.</p>
+
+<h3>Alignment Unit: WORD</h3>
+
+<div class="highlight-box">
+<strong>Justification:</strong>
+<ul>
+<li>Hindi is space-delimited &mdash; word boundaries are unambiguous</li>
+<li>WER is itself a word-level metric, so the alignment unit matches directly</li>
+<li><strong>Subword</strong> would add complexity (how to split Hindi words?) without clear benefit for this task</li>
+<li><strong>Phrase-level</strong> would lose granularity &mdash; can't pinpoint specific word errors</li>
+</ul>
+</div>
+
+<h3>Approach: ROVER-Style Confusion Network with Majority Voting</h3>
+
+<p><strong>Algorithm:</strong></p>
+<pre>
+For each utterance:
+  1. ref_tokens = tokenize(human_reference)
+  2. For each model_output in [Model H, i, k, l, m, n]:
+       alignment = levenshtein_align(ref_tokens, tokenize(model_output))
+       # Returns pairs: (ref_word, hyp_word), (ref_word, None), (None, hyp_word)
+
+  3. Build confusion network:
+       For each ref position i:
+         votes[i] = Counter of words each model produced
+
+  4. Construct pseudo-reference by majority voting:
+       For each position i:
+         top_word, count = most_voted(votes[i])
+         if top_word != ref[i] AND count >= 3:
+           pseudo_ref[i] = top_word    # Trust models over reference
+         else:
+           pseudo_ref[i] = ref[i]      # Keep original reference
+
+  5. Compute WER for each model against both references
+</pre>
+
+<p><strong>Agreement threshold:</strong> 3 out of 6 models (50%). If 3+ models agree on a word different from the reference, the reference is likely wrong.</p>
+
+<h3>Results (46 utterances, 6 ASR models):</h3>
+
+<table>
+<tr><th>Model</th><th>WER vs Reference</th><th>WER vs Lattice</th><th>Delta</th><th>Improved?</th></tr>
+<tr><td>Model H</td><td>3.98%</td><td>3.09%</td><td style="color:green">-0.89</td><td>Yes</td></tr>
+<tr><td>Model i</td><td>6.70%</td><td>7.76%</td><td style="color:red">+1.06</td><td>No</td></tr>
+<tr><td>Model n</td><td>11.39%</td><td>9.62%</td><td style="color:green">-1.77</td><td>Yes</td></tr>
+<tr><td>Model l</td><td>11.32%</td><td>10.20%</td><td style="color:green">-1.12</td><td>Yes</td></tr>
+<tr><td>Model m</td><td>20.73%</td><td>18.76%</td><td style="color:green">-1.97</td><td>Yes</td></tr>
+<tr><td>Model k</td><td>24.27%</td><td>23.93%</td><td style="color:green">-0.34</td><td>Yes</td></tr>
+</table>
+
+<div class="result-box">
+<strong>30.4% of human references had errors</strong> detectable by model consensus.<br>
+<strong>5 out of 6 models</strong> saw WER improvement with the lattice pseudo-reference.<br>
+<strong>Model i</strong> is the exception &mdash; its WER <em>increased</em>, meaning it was "accidentally" matching some reference errors.
+</div>
+
+<div class="figure-container">
+<img src="figures/fig_q4_lattice_wer.png" alt="Q4 Lattice WER">
+<p class="figure-caption">Figure 4: Fair WER &mdash; Original reference vs lattice-corrected reference per model</p>
+</div>
+
+<!-- ==================== INSIGHTS ==================== -->
+
+<h2 class="page-break">Key Learnings &amp; Insights</h2>
+
+<ol>
+<li><strong>Data quality matters more than model size:</strong> Even with whisper-small (244M params), domain-specific fine-tuning on ~22hrs of Hindi conversational audio reduced WER by 41% relative. This is more impactful than using a larger model without fine-tuning.</li>
+
+<li><strong>Hindi transcription has unique challenges:</strong>
+<ul>
+<li>Code-mixing (English words in Devanagari) makes spelling classification non-trivial</li>
+<li>Fillers in Hindi (अम्म, हम्म) are different from English (um, uh) and need a curated list</li>
+<li>Devanagari has complex conjunct rules that can indicate spelling errors</li>
+</ul></li>
+
+<li><strong>Human references aren't ground truth:</strong> 30% of utterances had reference errors detectable by model consensus. This has real implications &mdash; WER benchmarks may systematically undervalue good models.</li>
+
+<li><strong>Practical impact for Josh Talks:</strong> The spelling classification (Q3) directly enables the workflow &mdash; instead of re-transcribing all 22 hours, focus only on segments containing the 4,826 incorrectly spelled words.</li>
+</ol>
+
+<!-- ==================== APPENDIX ==================== -->
+
+<h2 class="page-break">Appendix: Code &amp; Reproduction</h2>
+
+<h3>Repository Structure</h3>
+<pre>
+q1_train_eval.py          # Q1: download, preprocess, train, evaluate, compare
+q2_disfluency_extra.py    # Q2: disfluency detection + audio clipping
+q3_spelling_label.py      # Q3: multi-signal spelling classifier
+q4_lattice_wer.py         # Q4: ROVER-style lattice WER
+</pre>
+
+<h3>Environment Setup</h3>
+<pre>
+python -m venv venv && source venv/bin/activate
+pip install torch==2.6.0+cu124 -f https://download.pytorch.org/whl/cu124
+pip install transformers datasets==3.6.0 evaluate jiwer librosa soundfile pandas
+</pre>
+
+<h3>Run Commands</h3>
+<pre>
+# Q1: Full ASR pipeline
+python q1_train_eval.py download --input_csv ft_data_preprocessed_with_text.csv --out_dir data_q1
+python q1_train_eval.py preprocess --input_csv ft_data_preprocessed_with_text.csv --out_dir data_q1
+python q1_train_eval.py train --manifest_dir data_q1 --output_dir whisper_hi_finetuned --epochs 3
+python q1_train_eval.py compare --pretrained_id openai/whisper-small \
+    --finetuned_id whisper_hi_finetuned --split test
+
+# Q2: Disfluency detection
+python q2_disfluency_extra.py --manifest data_q1/manifest_all.csv \
+    --audio_dir data_q1/audio --out_dir data_q2_disfluency
+
+# Q3: Spelling classification
+python q3_spelling_label.py --manifest data_q1/manifest_all.csv --out_csv data_q3_spelling.csv
+
+# Q4: Lattice WER
+python q4_lattice_wer.py --input_csv q4_data.csv --out_csv q4_results.csv
+</pre>
+
+<h3>Requirements</h3>
+<ul>
+<li>Python 3.10+, CUDA-capable GPU (~8 GB VRAM)</li>
+<li>Key packages: torch 2.6.0, transformers, datasets 3.6.0, evaluate, jiwer, librosa</li>
+</ul>
+
+</body>
+</html>

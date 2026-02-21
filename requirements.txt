@@ -1,0 +1,9 @@
+torch==2.6.0
+transformers>=4.40.0
+datasets==3.6.0
+evaluate
+jiwer
+librosa
+soundfile
+pandas
+matplotlib
